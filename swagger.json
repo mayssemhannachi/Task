@@ -1,0 +1,188 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Task Manager API",
+    "version": "1.0.0",
+    "description": "Documentation manuelle de l'API de gestion des tâches et de l'authentification"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:6000",
+      "description": "Serveur de développement local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Entrez votre token JWT généré lors du login"
+      }
+    },
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "654c1f2e8f1b2c001f3e4d5a"
+          },
+          "title": {
+            "type": "string",
+            "example": "Faire les courses"
+          },
+          "done": {
+            "type": "boolean",
+            "example": false
+          },
+          "duration": {
+            "type": "number",
+            "example": 30
+          }
+        }
+      },
+      "TaskInput": {
+        "type": "object",
+        "required": ["title", "duration"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Faire les courses"
+          },
+          "done": {
+            "type": "boolean",
+            "default": false,
+            "example": false
+          },
+          "duration": {
+            "type": "number",
+            "example": 30
+          }
+        }
+      },
+      "UserSignupInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "secret123"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin"],
+            "example": "user"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/signup": {
+      "post": {
+        "summary": "Inscription d'un nouvel utilisateur",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSignupInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Utilisateur créé avec succès"
+          },
+          "400": {
+            "description": "Données invalides"
+          }
+        }
+      }
+    },
+    "/api/tasks": {
+      "get": {
+        "summary": "Récupérer toutes les tâches",
+        "tags": ["Tasks"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste de toutes les tâches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou token invalide"
+          },
+          "403": {
+            "description": "Accès réservé aux administrateurs"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/tasks/{id}": {
+      "get": {
+        "summary": "Récupérer une tâche par son ID",
+        "tags": ["Tasks"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID de tache",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tâche trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID invalide"
+          },
+          "404": {
+            "description": "Tâche non trouvée"
+          }
+        }
+      }
+    }
+  }
+}
